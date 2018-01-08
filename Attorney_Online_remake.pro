@@ -83,6 +83,8 @@ win32:LIBS += "$$PWD/bass.dll"
 android:LIBS += -L$$PWD\android\libs\armeabi-v7a\ -lbass
 
 CONFIG += c++11
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -Os -ffunction-sections -fdata-sections -fvisibility=hidden
 
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
@@ -90,3 +92,9 @@ RESOURCES += \
     resources.qrc
 
 DISTFILES +=
+
+FORMS += \
+    resource/ui/lobby.ui \
+    resource/ui/loading.ui \
+    resource/ui/courtroom.ui \
+    resource/ui/viewport.ui
