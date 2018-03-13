@@ -117,7 +117,6 @@ public:
   QPoint get_button_spacing(QString p_identifier, QString p_file);
   pos_size_type get_element_dimensions(QString p_identifier, QString p_file);
   int get_font_size(QString p_identifier, QString p_file);
-  QString get_font_info(QString p_identifier, QString p_file);
   QColor get_color(QString p_identifier, QString p_file);
   QString get_sfx(QString p_identifier);
   QString read_char_ini(QString p_char, QString p_search_line, QString target_tag, QString terminator_tag);
