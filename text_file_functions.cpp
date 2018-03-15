@@ -314,6 +314,26 @@ QColor AOApplication::get_color(QString p_identifier, QString p_file)
   return return_color;
 }
 
+QString AOApplication::get_font_name(QString p_identifier, QString p_file)
+{
+    QString design_ini_path = get_theme_path() + p_file;
+    QString default_path = get_default_theme_path() + p_file;
+    QString f_result = read_design_ini(p_identifier, design_ini_path);
+
+    if(f_result == "")
+    {
+        f_result = read_design_ini(p_identifier, default_path);
+
+        if(f_result == "")
+        {
+            qDebug() << "Failure retreiving font name";
+            return f_result;
+        }
+    }
+
+    return f_result;
+}
+
 QString AOApplication::get_sfx(QString p_identifier)
 {
   QString design_ini_path = get_theme_path() + "courtroom_sounds.ini";

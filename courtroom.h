@@ -31,6 +31,7 @@
 #include <QSignalMapper>
 #include <QMap>
 #include <QTextBrowser>
+#include <QRect>
 
 class AOApplication;
 
@@ -121,6 +122,9 @@ public:
   //prints who played the song to IC chat and plays said song(if found on local filesystem)
   //takes in a list where the first element is the song name and the second is the char id of who played it
   void handle_song(QStringList *p_contents);
+
+  //animates music text
+  void handle_music_anim(QWidget *p_widget, QString p_identifier_a, QString p_identifier_b);
 
   void play_preanim();
 
@@ -275,6 +279,11 @@ private:
   AOImage *ui_vp_realization;
   AOMovie *ui_vp_wtce;
   AOMovie *ui_vp_objection;
+
+  AOImage *ui_vp_music_display_a;
+  AOImage *ui_vp_music_display_b;
+  QTextEdit *ui_vp_music_name;
+  QWidget *ui_vp_music_area;
 
   QTextEdit *ui_ic_chatlog;
 

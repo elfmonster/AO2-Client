@@ -13,6 +13,7 @@
 #include <QBrush>
 #include <QTextCharFormat>
 #include <QFont>
+#include <QPropertyAnimation>
 
 Courtroom::Courtroom(AOApplication *p_ao_app) : QMainWindow()
 {
@@ -65,6 +66,16 @@ Courtroom::Courtroom(AOApplication *p_ao_app) : QMainWindow()
   ui_vp_player_char = new AOCharMovie(ui_viewport, ao_app);
   ui_vp_desk = new AOScene(ui_viewport, ao_app);
   ui_vp_legacy_desk = new AOScene(ui_viewport, ao_app);
+
+  ui_vp_music_display_a = new AOImage(this, ao_app);
+  ui_vp_music_display_b = new AOImage(this, ao_app);
+  ui_vp_music_area = new QWidget(ui_vp_music_display_a);
+  ui_vp_music_name = new QTextEdit(ui_vp_music_area);
+  ui_vp_music_name->setText("hewwo OwO");
+  ui_vp_music_name->setFrameStyle(QFrame::NoFrame);
+  ui_vp_music_name->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  ui_vp_music_name->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  ui_vp_music_name->setReadOnly(true);
 
   ui_vp_evidence_display = new AOEvidenceDisplay(this, ao_app);
 
@@ -391,6 +402,18 @@ void Courtroom::set_widgets()
     set_size_and_pos(ui_vp_chatbox, "chatbox");
   }
 
+  set_size_and_pos(ui_vp_music_area, "music_area");
+  ui_vp_music_area->show();
+  set_size_and_pos(ui_vp_music_name, "music_name");
+
+  set_size_and_pos(ui_vp_music_display_a, "music_display_a");
+  ui_vp_music_display_a->set_image("music_display_a.png");
+  ui_vp_music_display_a->show();
+
+  set_size_and_pos(ui_vp_music_display_b, "music_display_b");
+  ui_vp_music_display_b->set_image("music_display_b.png");
+  ui_vp_music_display_b->show();
+
   ui_ic_chat_message->setStyleSheet("QLineEdit{background-color: rgba(100, 100, 100, 255);}");
 
   ui_vp_chatbox->set_image("chatmed.png");
@@ -541,6 +564,8 @@ void Courtroom::set_widgets()
   ui_char_select_right->set_image("arrow_right.png");
 
   set_size_and_pos(ui_spectator, "spectator");
+
+  handle_music_anim(ui_vp_music_name, "music_name", "music_area");
 }
 
 void Courtroom::set_fonts()
@@ -551,6 +576,7 @@ void Courtroom::set_fonts()
   set_font(ui_ms_chatlog, "ms_chatlog");
   set_font(ui_server_chatlog, "server_chatlog");
   set_font(ui_music_list, "music_list");
+  set_font(ui_vp_music_name, "music_name");
 }
 
 void Courtroom::set_font(QWidget *widget, QString p_identifier)
@@ -559,17 +585,45 @@ void Courtroom::set_font(QWidget *widget, QString p_identifier)
   int f_weight = ao_app->get_font_size(p_identifier, design_file);
   QString class_name = widget->metaObject()->className();
 
-  widget->setFont(QFont("Sans", f_weight));
+  QString font_name = ao_app->get_font_name("font_" + p_identifier, design_file);
+
+  widget->setFont(QFont(font_name, f_weight));
 
   QColor f_color = ao_app->get_color(p_identifier + "_color", design_file);
+
+  int bold = ao_app->get_font_size(p_identifier + "_bold", design_file); // is the font bold or not?
+
+  QString is_bold = "";
+  if(bold == 1) is_bold = "bold";
 
   QString style_sheet_string = class_name + " { background-color: rgba(0, 0, 0, 0);\n" +
                                             "color: rgba(" +
                                              QString::number(f_color.red()) + ", " +
                                              QString::number(f_color.green()) + ", " +
-                                             QString::number(f_color.blue()) + ", 255); }";
+                                             QString::number(f_color.blue()) + ", 255);\n"
+                                             "font: " + is_bold + "; }";
 
   widget->setStyleSheet(style_sheet_string);
+}
+
+void Courtroom::handle_music_anim(QWidget *p_widget, QString p_identifier_a, QString p_identifier_b)
+{
+    QString file_a = "courtroom_design.ini";
+    QString file_b = "courtroom_fonts.ini";
+    pos_size_type res_a = ao_app->get_element_dimensions(p_identifier_a, file_a);
+    pos_size_type res_b = ao_app->get_element_dimensions(p_identifier_b, file_a);
+    int speed = ao_app->get_font_size(p_identifier_a + "_speed", file_b);
+    int nchar = ui_vp_music_name->toPlainText().size();
+
+    int time = nchar/speed*1000;
+
+    QPropertyAnimation *animation = new QPropertyAnimation(p_widget, "geometry");
+    animation->setLoopCount(-1);
+    animation->setDuration(time);
+    animation->setStartValue(QRect(-res_a.width + res_a.x, res_a.y, res_a.width, res_a.height));
+    animation->setEndValue(QRect(res_b.width + res_a.x, res_a.y, res_a.width, res_a.height));
+
+    animation->start();
 }
 
 void Courtroom::set_window_title(QString p_title)
@@ -923,6 +977,7 @@ void Courtroom::handle_chatmessage(QStringList *p_contents)
   for (int n_string = 0 ; n_string < chatmessage_size ; ++n_string)
   {
     m_chatmessage[n_string] = p_contents->at(n_string);
+//    qDebug() << "m_chatmessage[" << n_string << "] = " << m_chatmessage[n_string];
   }
 
   int f_char_id = m_chatmessage[CHAR_ID].toInt();
@@ -1156,7 +1211,7 @@ void Courtroom::append_ic_text(QString p_text, QString p_name)
   normal.setFontWeight(QFont::Normal);
   const QTextCursor old_cursor = ui_ic_chatlog->textCursor();
   const int old_scrollbar_value = ui_ic_chatlog->verticalScrollBar()->value();
-  const bool is_scrolled_up = old_scrollbar_value == ui_ic_chatlog->verticalScrollBar()->minimum();
+  const bool is_scrolled_up = old_scrollbar_value == ui_ic_chatlog->verticalScrollBar()->maximum();
 
   ui_ic_chatlog->moveCursor(QTextCursor::Start);
 
@@ -1173,7 +1228,7 @@ void Courtroom::append_ic_text(QString p_text, QString p_name)
   {
       // The user hasn't selected any text and the scrollbar is at the top: scroll to the top.
       ui_ic_chatlog->moveCursor(QTextCursor::Start);
-      ui_ic_chatlog->verticalScrollBar()->setValue(ui_ic_chatlog->verticalScrollBar()->minimum());
+      ui_ic_chatlog->verticalScrollBar()->setValue(ui_ic_chatlog->verticalScrollBar()->maximum());
   }
 }
 
@@ -1535,6 +1590,11 @@ void Courtroom::handle_song(QStringList *p_contents)
       music_player->play(f_song);
     }
   }
+
+  int pos = f_song.lastIndexOf(QChar('.'));
+  QString r_song = f_song.left(pos);
+
+  ui_vp_music_name->setText(r_song);
 }
 
 void Courtroom::handle_wtce(QString p_wtce)
